@@ -10,6 +10,7 @@ router.get("/:table", productsController.getByTable);
 router.get("/:table/:id", productsController.getById);
 router.post("/:table", productsController.create);
 router.delete("/:table/:id", productsController.hapus);
+router.put("/:table/:id", productsController.editPut);
 
 //
 // router.put("/product", (req, res, next) => {

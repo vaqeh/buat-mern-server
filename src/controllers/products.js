@@ -3,20 +3,16 @@ const fs = require("fs-extra");
 const path = require("path");
 const filePath = path.join(__dirname, "../db/db.json");
 
-
-
-
-
 exports.createProduct = (req, res, next) => {
-  console.log("request", req.body);
-  const name = req.body.name
-  const umur = req.body.umur
+  // console.log("request", req.body);
+  const name = req.body.name;
+  const umur = req.body.umur;
   res.json({
     message: "create product sukses",
     data: {
       id: 1,
       name: name,
-      umur : umur,
+      umur: umur,
     },
   });
   next();
@@ -27,10 +23,10 @@ exports.getAllProducts = (req, res, next) => {
   next();
 };
 exports.getByTable = (req, res, next) => {
-  console.log("quer", req.query);
+  // console.log("quer", req.query);
   const endpoint = req.params.table;
   const data = db[endpoint];
-  console.log("data", data);
+  // console.log("data", data);
 
   const keys = Object.keys(req.query);
   const key = keys[0];
@@ -57,8 +53,8 @@ exports.getById = (req, res, next) => {
   const id = req.params.id;
   const data = db[table];
   if (data) {
-    console.log("data", data);
-    console.log("id", id);
+    // console.log("data", data);
+    // console.log("id", id);
     const response = data.find((item) => item.id.toString() === id.toString());
     console.log("res", response);
     res.json(response);
@@ -69,64 +65,77 @@ exports.getById = (req, res, next) => {
   next();
 };
 
-
-
-exports.create =async (req, res, next) => {
-
+exports.create = async (req, res, next) => {
   try {
-    const tableName = req.params.table
+    const tableName = req.params.table;
 
-   const data = db[tableName]
-    if(data){
-     const lastItemId = data[data.length -1].id
-     const payload = {id : lastItemId +1, ...req.body } 
-     data.push(payload)
-   
-    }else{
-     db[tableName] = [{id: 1, ...req.body}]
+    const data = db[tableName];
+    if (data) {
+      const lastItemId = data[data.length - 1].id;
+      const payload = { id: lastItemId + 1, ...req.body };
+      data.push(payload);
+    } else {
+      db[tableName] = [{ id: 1, ...req.body }];
     }
-   await fs.writeJson(filePath, db);
-  
-    res.json(db[tableName])
-    
-  } catch (error) {
-    res.send(error)
-  }
+    await fs.writeJson(filePath, db);
 
+    res.json(db[tableName]);
+  } catch (error) {
+    res.send(error);
+  }
 
   // console.log("payload", req.body);
 
-  
-next();
-
-
-}
+  next();
+};
 
 exports.hapus = async (req, res, next) => {
+  try {
+    const tableName = req.params.table;
+    const id = req.params.id;
 
-try {
-  const tableName = req.params.table
-  const id = req.params.id
+    const idxToDelete = db[tableName].findIndex(
+      (item) => parseInt(item.id) == parseInt(id)
+    );
+    console.log("idx", idxToDelete);
+    if (idxToDelete > -1) {
+      db[tableName].splice(idxToDelete, 1);
+      await fs.writeJson(filePath, db);
+      res.json(db[tableName]);
+    } else {
+      res.send("id " + id + " tidak ditemukan");
+    }
+  } catch (error) {
+    console.log("err", error);
+  }
+  next();
+};
 
-  const idxToDelete = db[tableName].findIndex((item)=> parseInt( item.id) == parseInt( id))
-console.log("idx", idxToDelete);
-if(idxToDelete > -1){
 
-  db[tableName].splice(idxToDelete, 1) 
-  await fs.writeJson(filePath, db);
-res.json(db[tableName])
-}else{
-res.send("id "+ id +" tidak ditemukan")
-}
-
-
-
-
-
-  
-} catch (error) {
-  console.log("err", error);
-}
-next()
-}
+exports.editPut = async (req, res, next) => {
+  try {
+    const tableName = req.params.table;
+    const id = req.params.id;
+    const idxToEdit = db[tableName].findIndex(
+      (item) => parseInt(item.id) == parseInt(id)
+    );
+    console.log("idx", idxToEdit);
+    if (idxToEdit > -1) {
+      // Salin id dari objek yang ada
+      const existingId = db[tableName][idxToEdit].id;
+      // Ganti data dengan data yang diperbarui
+      db[tableName][idxToEdit] = {
+        ...req.body,
+        id: existingId, // Gunakan id yang ada
+      };
+      await fs.writeJson(filePath, db);
+      res.json(db[tableName]);
+    } else {
+      res.send("id " + id + " tidak ditemukan");
+    }
+  } catch (error) {
+    console.log("err", error);
+  }
+  next();
+};
 
